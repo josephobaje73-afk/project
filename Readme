@@ -1,0 +1,37 @@
+# MedSimplify
+ 
+A Streamlit app that looks up a medication, checks for FDA recalls, and uses
+the Gemini API to rewrite the official drug label in plain language.
+ 
+## Setup
+ 
+```bash
+pip install -r requirements.txt
+export GEMINI_API_KEY="your-key-here"   # or paste it into the sidebar at runtime
+streamlit run app.py
+```
+ 
+No key for openFDA is required (it's a public API, though you can add one
+for higher rate limits later if you want).
+ 
+## How it meets the assignment requirements
+ 
+| Requirement | Where it lives |
+|---|---|
+| Fetch drug info (usage, warnings, side effects, dosage) | `FDAClient.fetch_label()` → openFDA Drug Labeling API |
+| Rewrite in plain language | `AITranslator.simplify()` → Gemini API |
+| Check recent recalls, warn the user | `FDAClient.fetch_recalls()` + `render_recall_banner()` → openFDA Enforcement API |
+| Save search history to a local file | `SearchHistory` → reads/writes `search_history.json` |
+| File handling | `SearchHistory._read()` / `_write()` |
+| Exception handling | `InvalidMedicationNameError`, `MedicationNotFoundError`, `FDANetworkError`, `AITranslationError` — each caught and shown to the user instead of crashing the app |
+| Regular expressions | `Medication.clean_text()` strips citation markers/bullets/whitespace; `Medication.validate_name()` validates input; `Medication.extract_warning_keywords()` pulls warning phrases out of raw text |
+| OOP | `Medication`, `FDAClient`, `AITranslator`, `SearchHistory` classes |
+ 
+## Notes / things you could extend
+ 
+- `FDAClient.fetch_label()` tries generic name, then brand name, then a
+  free-text fallback — you could add fuzzy matching if a query returns nothing.
+- History is capped at the 100 most recent searches in `search_history.json`.
+- The Gemini model is set to `gemini-2.0-flash` in `AITranslator.__init__`;
+  change the `model` argument if your assignment specifies a different one.
+- No API keys are hardcoded — the Gemini key is read from an environment
